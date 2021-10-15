@@ -6,10 +6,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import freemarker.template.Configuration;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -122,6 +124,7 @@ public final class Main {
     Spark.get("/autocorrect", new AutocorrectHandler(), freeMarker);
     //TODO: create a call to Spark.post to make a post request to a url which
       // will handle getting autocorrect results for the input
+    Spark.post("/autocorrect", new ResultsHandler());
   }
 
   /**
@@ -162,13 +165,21 @@ public final class Main {
         public String handle(Request req, Response res) {
             //TODO: Get JSONObject from req and use it to get the value of the input you want to
             // generate suggestions for
+            JsonObject reqBody = GSON.fromJson(req.body(), JsonObject.class);
 
             //TODO: use the global autocorrect instance to get the suggestions
+            Set<String> s = ac.suggest(reqBody.get("text").toString());
 
             //TODO: create an immutable map using the suggestions
+            HashMap<Integer, String> variables = new HashMap<>();
+            int i = 0;
+            for (String word : s) {
+                variables.put(i, word);
+                i++;
+            }
 
             //TODO: return a Json of the suggestions (HINT: use the GSON.Json())
-            return null;
+            return GSON.toJson(variables);
         }
     }
 }
